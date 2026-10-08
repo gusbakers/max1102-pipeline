@@ -1,0 +1,41 @@
+name: Validate Airflow DAG
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-dag:
+    runs-on: ubuntu-latest
+
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Airflow image
+        run: |
+          docker build \
+            -t max1102-airflow:3.2.0 \
+            airflow
+
+      - name: Validate DAG
+        run: |
+          docker run --rm \
+            --entrypoint python \
+            -e AIRFLOW__CORE__LOAD_EXAMPLES=False \
+            -v "$PWD/airflow/dags:/opt/airflow/dags:ro" \
+            -v "$PWD/tests:/opt/project/tests:ro" \
+            max1102-airflow:3.2.0 \
+            /opt/project/tests/check_dag.py

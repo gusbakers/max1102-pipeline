@@ -1,0 +1,24 @@
+
+# Configuración y credenciales
+.env
+.env.*
+.databrickscfg
+
+# Archivos generados por Airflow
+airflow/logs/
+airflow/config/
+airflow/plugins/
+
+# Datos de práctica
+data/*.csv
+data/*.parquet
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+
+# Archivos del sistema y del editor
+.DS_Store
+.vscode/

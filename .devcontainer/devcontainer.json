@@ -1,6 +1,6 @@
 {
   "name": "MAX-1102 Airflow",
-  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "build": {"dockerfile": "Dockerfile"},
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:4": {}
   },
