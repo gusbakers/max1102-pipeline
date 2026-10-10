@@ -22,3 +22,16 @@ __pycache__/
 # Archivos del sistema y del editor
 .DS_Store
 .vscode/
+
+!.env.example
+*.pyc
+api/*.bak
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.zip
+/api/.env
