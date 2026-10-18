@@ -1,7 +1,7 @@
 # Semana 4: archivos preparados por día
 
 Empieza por **[INICIAR_LUNES.md](INICIAR_LUNES.md)**. La carpeta ya está
-descomprimida y versionada en GitHub; no necesitas volver a subir ni extraer el ZIP.
+descomprimida y versionada en la rama `week4-preparacion` de GitHub; no necesitas volver a subir ni extraer el ZIP.
 
 Todo se ejecuta desde la raíz de `gusbakers/max1102-pipeline` en Codespaces.
 

@@ -35,12 +35,15 @@ git status --short
 
 La ruta puede ser /workspaces/max1102-pipeline o el nombre que tenga tu Codespace. El remoto debe corresponder a gusbakers/max1102-pipeline. Los comandos siguientes se ejecutan desde esa raíz. Si hay trabajo sin guardar, revísalo antes de cambiar de rama; no uses reset --hard ni borres archivos para dejar el árbol limpio.
 
-**Paso 0.2. Sincronizar la carpeta preparada.** MAX_Week4 ya está descomprimida en el repositorio. Desde main en tu Codespace:
+**Paso 0.2. Sincronizar la carpeta preparada.** MAX_Week4 ya está descomprimida en la rama `week4-preparacion`. En tu Codespace:
 
 ```bash
-git pull --ff-only origin main
+git fetch origin week4-preparacion
+git switch --track origin/week4-preparacion
 ls MAX_Week4
 ```
+
+Si ya tienes esa rama local, usa `git switch week4-preparacion`. Conserva tus cambios locales si Git avisa de un conflicto; no uses comandos para descartarlos.
 
 Debes ver install.py, days, INICIAR_LUNES.md y GUIA_Semana4.md. Usa esta carpeta actualizada; el ZIP original conserva una versión anterior. El instalador copia los archivos de cada día a sus rutas definitivas y conserva respaldos locales.
 
