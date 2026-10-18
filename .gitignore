@@ -48,3 +48,6 @@ __pycache__/
 *.tfvars.json
 infra/**/generated*.tf
 infra/**/plan*.json
+/monitor-result.json
+/infra/inventory.json
+*.bak

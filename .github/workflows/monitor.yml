@@ -1,0 +1,60 @@
+name: MAX production monitor
+on:
+  schedule:
+    - cron: '23 * * * *'
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      drill_mode:
+        description: 'Test alert creation and recovery without stopping the API'
+        type: choice
+        options: [none, fail, recover]
+        default: none
+permissions:
+  contents: read
+concurrency:
+  group: max-production-monitor
+  cancel-in-progress: false
+jobs:
+  monitor:
+    if: vars.ENABLE_MONITOR != 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check availability and optionally monthly job freshness
+        id: probe
+        continue-on-error: true
+        env:
+          CHECK_JOBS: ${{ vars.ENABLE_PIPELINE_MONITOR }}
+          DRILL_MODE: ${{ inputs.drill_mode }}
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+          DATABRICKS_JOB_IDS: ${{ vars.DATABRICKS_JOB_IDS }}
+          PIPELINE_MAX_AGE_DAYS: ${{ vars.PIPELINE_MAX_AGE_DAYS || '35' }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: |
+          args=(--url https://maxweek2-gusbakers-972358cb.azurewebsites.net --output monitor-result.json)
+          if [ "$CHECK_JOBS" = true ]; then args+=(--jobs); fi
+          if [ "$DRILL_MODE" = fail ]; then args+=(--simulate-failure --drill); fi
+          if [ "$DRILL_MODE" = recover ]; then args+=(--drill); fi
+          python week4/scripts/monitor.py "${args[@]}"
+      - name: Update the incident or record recovery
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await require('./.github/scripts/monitor_issue.js')({github, context, core});
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: monitor-${{ github.run_id }}-${{ github.run_attempt }}
+          path: monitor-result.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Fail the workflow when the probe failed
+        if: steps.probe.outcome != 'success'
+        run: exit 1

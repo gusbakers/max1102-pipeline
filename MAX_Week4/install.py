@@ -11,6 +11,8 @@ def main():
     parser.add_argument('--dry-run', action='store_true', help='Mostrar cambios sin escribir archivos')
     args = parser.parse_args()
     root = Path.cwd()
+    if (root / 'week4/IMPLEMENTED').is_file():
+        raise SystemExit('La semana 4 ya está integrada. Este instalador es histórico; sigue docs/week4/README.md.')
     if not (root / '.git').exists() or not (root / 'api/main.py').is_file():
         raise SystemExit('Ejecuta desde la raíz del repositorio que contiene .git y api/main.py.')
     package = Path(__file__).resolve().parent

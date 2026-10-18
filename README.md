@@ -121,3 +121,15 @@ Después, detener el Codespace desde GitHub.
 
 Para conservar el proyecto, hacer commit y push antes de eliminar
 el Codespace.
+
+## Semana 4: entrega y operación
+
+[![CI](https://github.com/gusbakers/max1102-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/gusbakers/max1102-pipeline/actions/workflows/ci.yml)
+
+La implementación de CI/CD, Terraform, observabilidad y demo está en las carpetas del proyecto. Seguir [la guía de lunes a viernes](docs/week4/README.md), [activación con sesiones del Codespace](docs/week4/activation.md), [estado verificable](docs/week4/status.md) y [recuperación](docs/week4/runbook.md).
+
+CI prueba la API sin consumir Gemini, verifica el DAG en Docker y valida herramientas/Terraform. CD Azure se habilita después de configurar la identidad OIDC; comprueba health y el SHA desplegado. El monitor horario abre/cierra incidentes en GitHub. Los despliegues Databricks/Airflow y la adopción real de Terraform requieren la configuración y evidencia descritas en la guía.
+
+Los notebooks operativos del workspace deben exportarse y revisarse: la copia actual de `00_common.py` no contiene todos los helpers que usan las tareas. El despliegue de notebooks se bloquea hasta completar esa revisión.
+
+`MAX_Week4/` es material histórico. No reinstalar sus plantillas sobre esta implementación.

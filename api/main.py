@@ -12,6 +12,13 @@ from google.genai import errors, types
 from pydantic import BaseModel, ConfigDict, Field
 
 app = FastAPI(title="MAX Week 2 — Claim Summary con Gemini", version="2.0.0")
+# Week4 observability
+try:
+    from .week4_observability import install as install_observability
+except ImportError:
+    from week4_observability import install as install_observability
+install_observability(app)
+
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 
