@@ -1,0 +1,107 @@
+name: MAX Week 4 CI-CD
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: max-week4-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            api/requirements.txt
+            api/requirements-dev.txt
+      - run: python -m pip install -r api/requirements-dev.txt
+      - name: Run the API tests without real credentials
+        working-directory: api
+        run: python -m pytest -q
+      - run: python week4/scripts/package_api.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-${{ github.sha }}
+          path: release/api.zip
+          retention-days: 7
+  check-dag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the existing Airflow image
+        run: docker build -t max1102-airflow:3.2.0 airflow
+      - name: Validate the six tasks and dependencies
+        run: |
+          docker run --rm --entrypoint python \
+            -e AIRFLOW__CORE__LOAD_EXAMPLES=False \
+            -v "$PWD/airflow/dags:/opt/airflow/dags:ro" \
+            -v "$PWD/tests:/opt/project/tests:ro" \
+            max1102-airflow:3.2.0 /opt/project/tests/check_dag.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: airflow-source-${{ github.sha }}
+          path: |
+            airflow/Dockerfile
+            airflow/dags/*.py
+            docker-compose.yaml
+          retention-days: 7
+  deploy-api:
+    needs: [api-tests, check-dag]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.ENABLE_CD == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: api-${{ github.sha }}
+          path: release
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Enable Python dependency build
+        run: |
+          az webapp config appsettings set \
+            --resource-group rg-max-week2-api \
+            --name maxweek2-gusbakers-972358cb \
+            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true \
+            --output none
+      - uses: azure/webapps-deploy@v3
+        with:
+          app-name: maxweek2-gusbakers-972358cb
+          package: release/api.zip
+      - name: Verify the exact deployed commit
+        env:
+          EXPECTED_COMMIT: ${{ github.sha }}
+        run: |
+          python week4/scripts/smoke.py \
+            --url https://maxweek2-gusbakers-972358cb.azurewebsites.net \
+            --commit "$EXPECTED_COMMIT"
+  deploy-notebooks:
+    needs: [api-tests, check-dag]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.ENABLE_DATABRICKS_CD == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import reviewed notebooks without executing them
+        env:
+          DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+          DATABRICKS_NOTEBOOK_DIR: ${{ vars.DATABRICKS_NOTEBOOK_DIR }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: python week4/scripts/deploy_notebooks.py

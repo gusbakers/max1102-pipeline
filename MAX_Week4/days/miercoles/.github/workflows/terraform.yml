@@ -1,0 +1,35 @@
+name: MAX Terraform Validate
+on:
+  pull_request:
+    branches: [main]
+    paths: ['infra/**', '.github/workflows/terraform.yml']
+  push:
+    branches: [main]
+    paths: ['infra/**', '.github/workflows/terraform.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [azure, identity, aws, databricks, snowflake]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.13.5'
+      - name: Require reviewed configuration
+        env:
+          MODULE: ${{ matrix.module }}
+        run: test -f "infra/$MODULE/main.tf"
+      - name: Validate configuration without cloud access
+        env:
+          MODULE: ${{ matrix.module }}
+        run: |
+          terraform -chdir="infra/$MODULE" init -backend=false -input=false
+          terraform -chdir="infra/$MODULE" fmt -check
+          terraform -chdir="infra/$MODULE" validate

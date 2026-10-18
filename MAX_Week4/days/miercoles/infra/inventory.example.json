@@ -1,0 +1,32 @@
+{
+  "organization": "TU_ORGANIZACION_HCP",
+  "azure": [
+    {"address":"azurerm_resource_group.api", "id":"ID_DEL_RESOURCE_GROUP"},
+    {"address":"azurerm_service_plan.api", "id":"ID_DEL_PLAN"},
+    {"address":"azurerm_linux_web_app.api", "id":"ID_DE_LA_WEBAPP"},
+    {"address":"azurerm_role_assignment.deploy", "id":"ID_DEL_ROLE_ASSIGNMENT"}
+  ],
+  "identity": [
+    {"address":"azuread_application.github", "id":"/applications/OBJECT_ID_APP"},
+    {"address":"azuread_service_principal.github", "id":"OBJECT_ID_SP"},
+    {"address":"azuread_application_federated_identity_credential.github", "id":"OBJECT_ID_APP/federatedIdentityCredential/ID_FEDERACION"}
+  ],
+  "aws": [
+    {"address":"aws_s3_bucket.lake", "id":"NOMBRE_REAL_BUCKET"},
+    {"address":"aws_s3_bucket_public_access_block.lake", "id":"NOMBRE_REAL_BUCKET"}
+  ],
+  "databricks": [
+    {"address":"databricks_job.extract", "id":"JOB_ID_EXTRACT"},
+    {"address":"databricks_job.validate", "id":"JOB_ID_VALIDATE"},
+    {"address":"databricks_job.transform", "id":"JOB_ID_TRANSFORM"},
+    {"address":"databricks_job.load", "id":"JOB_ID_LOAD"},
+    {"address":"databricks_schema.pipeline", "id":"workspace.max1102_pipeline"},
+    {"address":"databricks_volume.raw", "id":"workspace.max1102_pipeline.raw"}
+  ],
+  "snowflake": [
+    {"address":"snowflake_database.lab", "id":"\"MAX1201_S3_LAB\""},
+    {"address":"snowflake_schema.landing", "id":"\"MAX1201_S3_LAB\".\"LANDING\""},
+    {"address":"snowflake_warehouse.lab", "id":"\"MAX1201_S3_WH\""},
+    {"address":"snowflake_stage.lake", "id":"MAX1201_S3_LAB|LANDING|S3_LAKE"}
+  ]
+}

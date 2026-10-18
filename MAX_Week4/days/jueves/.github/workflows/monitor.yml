@@ -1,0 +1,35 @@
+name: MAX Monitor API
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+    inputs:
+      simulate_failure:
+        description: 'Test the alert without taking the API down'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  monitor:
+    if: vars.ENABLE_MONITOR == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check API health
+        run: |
+          python week4/scripts/smoke.py \
+            --url https://maxweek2-gusbakers-972358cb.azurewebsites.net \
+            --attempts 3 --delay 15
+      - name: Simulate an alert
+        if: inputs.simulate_failure == true
+        run: |
+          echo 'Intentional alert drill. The API has not been stopped.'
+          exit 1
+      - name: Record the result
+        if: always()
+        env:
+          RESULT: ${{ job.status }}
+        run: |
+          echo "Monitor result: $RESULT. This probes /health, not Gemini or data freshness." >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,57 @@
+name: MAX Week 4 CI-CD
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: max-week4-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: |
+            api/requirements.txt
+            api/requirements-dev.txt
+      - run: python -m pip install -r api/requirements-dev.txt
+      - name: Run the API tests without real credentials
+        working-directory: api
+        run: python -m pytest -q
+      - run: python week4/scripts/package_api.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-${{ github.sha }}
+          path: release/api.zip
+          retention-days: 7
+  check-dag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the existing Airflow image
+        run: docker build -t max1102-airflow:3.2.0 airflow
+      - name: Validate the six tasks and dependencies
+        run: |
+          docker run --rm --entrypoint python \
+            -e AIRFLOW__CORE__LOAD_EXAMPLES=False \
+            -v "$PWD/airflow/dags:/opt/airflow/dags:ro" \
+            -v "$PWD/tests:/opt/project/tests:ro" \
+            max1102-airflow:3.2.0 /opt/project/tests/check_dag.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: airflow-source-${{ github.sha }}
+          path: |
+            airflow/Dockerfile
+            airflow/dags/*.py
+            docker-compose.yaml
+          retention-days: 7
