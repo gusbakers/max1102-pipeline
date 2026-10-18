@@ -1,0 +1,32 @@
+-- LOCATION: Snowflake > Projects/Worksheets > SQL worksheet.
+-- Metadata and account usage: do not resume a warehouse just to run SHOW.
+SHOW WAREHOUSES LIKE 'MAX1201_S3_WH';
+SHOW STAGES IN DATABASE MAX1201_S3_LAB;
+SHOW FILE FORMATS IN DATABASE MAX1201_S3_LAB;
+SHOW PIPES IN DATABASE MAX1201_S3_LAB;
+SHOW INTEGRATIONS;
+
+-- Run these SELECTs only during the short cost-review session.
+-- Use an existing role authorized to read ACCOUNT_USAGE. Do not elevate to ACCOUNTADMIN.
+USE WAREHOUSE MAX1201_S3_WH;
+SELECT START_TIME::DATE AS USAGE_DATE,
+       SUM(CREDITS_USED_COMPUTE) AS COMPUTE_CREDITS,
+       SUM(CREDITS_USED_CLOUD_SERVICES) AS CLOUD_SERVICE_CREDITS
+FROM SNOWFLAKE.ACCOUNT_USAGE.WAREHOUSE_METERING_HISTORY
+WHERE WAREHOUSE_NAME = 'MAX1201_S3_WH'
+  AND START_TIME >= DATEADD(day, -7, CURRENT_TIMESTAMP())
+GROUP BY 1 ORDER BY 1;
+
+SELECT QUERY_ID, START_TIME, EXECUTION_STATUS,
+       TOTAL_ELAPSED_TIME / 1000 AS SECONDS, ERROR_CODE
+FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
+WHERE WAREHOUSE_NAME = 'MAX1201_S3_WH'
+  AND START_TIME >= DATEADD(day, -7, CURRENT_TIMESTAMP())
+ORDER BY START_TIME DESC LIMIT 30;
+
+-- If Terraform already manages this warehouse, edit its HCL settings instead
+-- of applying the following change here; otherwise this introduces drift.
+-- ALTER WAREHOUSE MAX1201_S3_WH SET AUTO_SUSPEND = 60 AUTO_RESUME = TRUE;
+
+-- At the end use Suspend in Snowsight only if status is STARTED.
+-- An already suspended warehouse needs no action.

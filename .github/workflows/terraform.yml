@@ -1,0 +1,48 @@
+name: MAX Terraform drift
+on:
+  schedule:
+    - cron: '41 11 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  drift:
+    if: vars.ENABLE_TERRAFORM_DRIFT == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.13.5'
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_TF_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Read-only Azure drift check after adoption
+        env:
+          ARM_USE_OIDC: 'true'
+          ARM_CLIENT_ID: ${{ vars.AZURE_TF_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          TF_IN_AUTOMATION: 'true'
+        run: |
+          test -f infra/adopted/azure/managed.tf
+          terraform -chdir=infra/adopted/azure init -input=false -lockfile=readonly
+          set +e
+          terraform -chdir=infra/adopted/azure plan -input=false -detailed-exitcode -no-color > /tmp/drift.log 2>&1
+          code=$?
+          set -e
+          if [ "$code" -eq 2 ]; then
+            echo 'Azure drift detected; inspect it in an authenticated environment. No apply was executed.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          elif [ "$code" -ne 0 ]; then
+            echo 'Drift check could not complete. Check backend and reader identity.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+          echo 'No Azure drift detected.' >> "$GITHUB_STEP_SUMMARY"

@@ -35,3 +35,19 @@ __pycache__/
 .pytest_cache/
 *.zip
 /api/.env
+
+# MAX Week 4 local-only files
+/.week4-private/
+/.week4-backups/
+/.venv-week4/
+/release/
+**/.terraform/
+*.tfstate*
+*.tfplan
+*.tfvars
+*.tfvars.json
+infra/**/generated*.tf
+infra/**/plan*.json
+/monitor-result.json
+/infra/inventory.json
+*.bak
