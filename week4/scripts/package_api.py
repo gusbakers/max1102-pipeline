@@ -9,7 +9,8 @@ def package(source, output, revision):
     import re
     if not re.fullmatch(r'[0-9a-f]{40}', revision):
         raise ValueError('Expected a full Git commit SHA')
-    names = ['main.py', 'week4_observability.py', 'requirements.txt']
+    names = ['main.py', 'contracts.py', 'rag.py', 'rag_store.py', 'rag_config.py',
+             'week4_observability.py', 'requirements.txt']
     if any(not (source / name).is_file() for name in names):
         raise ValueError('Application files are missing')
     output.parent.mkdir(parents=True, exist_ok=True)

@@ -1,0 +1,5 @@
+{"id":"paid-meaning","status":"PAID","question":"¿Qué significa PAID en el proyecto?","expected_source":"repo://knowledge/claims_reference.jsonl#paid"}
+{"id":"denied-cause","status":"DENIED","question":"¿Puedo saber por qué se denegó este claim solo con su estado?","expected_source":"repo://knowledge/claims_reference.jsonl#denied"}
+{"id":"pending-contract","status":"PENDING","question":"¿El pipeline batch acepta PENDING igual que la API?","expected_source":"repo://knowledge/claims_reference.jsonl#pending"}
+{"id":"duplicate-rule","status":"PAID","question":"¿Qué se conserva cuando dos claims válidos tienen el mismo ID?","expected_source":"repo://knowledge/claims_reference.jsonl#quality"}
+{"id":"coverage-scope","status":"DENIED","question":"¿La base permite determinar cobertura o elegibilidad?","expected_source":"repo://knowledge/claims_reference.jsonl#scope"}
