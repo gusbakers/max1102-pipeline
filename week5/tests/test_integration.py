@@ -2,6 +2,7 @@
 import asyncio
 from dataclasses import replace
 from datetime import datetime, timezone
+from decimal import Decimal
 import json
 import os
 from pathlib import Path
@@ -113,7 +114,7 @@ def test_rag_sdk_http_and_real_database_together(indexed, monkeypatch):
 
 @pytest.mark.skipif(os.getenv('RUN_KAFKA_INTEGRATION') != '1', reason='Real Kafka required')
 def test_kafka_acknowledgement_restart_replay_and_rejection(database):
-    bootstrap = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
+    bootstrap = os.getenv('KAFKA_BOOTSTRAP_SERVERS', '127.0.0.1:9092')
     suffix = uuid4().hex
     topic = 'claims-test-' + suffix
     group = 'claims-group-' + suffix
@@ -126,7 +127,7 @@ def test_kafka_acknowledgement_restart_replay_and_rejection(database):
         assert publish(events, bootstrap, topic) == 3
         assert consume(database, bootstrap, group, topic, max_messages=3) == {
             'inserted':3, 'duplicate':0, 'rejected':0}
-        conflict = events[0].model_copy(update={'claim':events[0].claim.model_copy(update={'claim_amount':999})})
+        conflict = events[0].model_copy(update={'claim':events[0].claim.model_copy(update={'claim_amount':Decimal('999.00')})})
         assert publish([events[0], conflict], bootstrap, topic) == 2
         producer = Producer({'bootstrap.servers':bootstrap})
         producer.produce(topic, key=b'bad', value=b'{invalid json')
@@ -149,5 +150,6 @@ def test_kafka_acknowledgement_restart_replay_and_rejection(database):
             conn.execute('DELETE FROM week5_stream.events WHERE event_id=ANY(%s)', ([e.event_id for e in events],))
             conn.execute('DELETE FROM week5_stream.rejections WHERE topic=%s', (topic,))
         from confluent_kafka.admin import AdminClient
-        for future in AdminClient({'bootstrap.servers':bootstrap}).delete_topics([topic]).values():
+        admin = AdminClient({'bootstrap.servers':bootstrap})
+        for future in admin.delete_topics([topic]).values():
             future.result(timeout=20)

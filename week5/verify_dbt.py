@@ -68,11 +68,13 @@ def verify():
     with duckdb.connect(os.environ['DBT_DUCKDB_PATH']) as conn:
         conn.execute("INSERT INTO fixture_providers VALUES ('P1', 'Conflict', 'Other')")
     run('build', success=False)
+    assert snapshot()[:2] == (claims, report), 'Provider failure changed published claims/report'
     run('seed', '--full-refresh')
     # Bad data beyond the inherited rejection budget must fail before downstream publication.
     with duckdb.connect(os.environ['DBT_DUCKDB_PATH']) as conn:
         conn.execute("UPDATE fixture_claims SET claim_amount='-1' WHERE claim_id < 'C020'")
     run('build', success=False)
+    assert snapshot()[:2] == (claims, report), 'Quality failure changed published claims/report'
     run('seed', '--full-refresh')
     run('build')
     assert snapshot() == (claims, report, quality)

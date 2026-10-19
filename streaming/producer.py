@@ -61,6 +61,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if not 1 <= args.count <= 10000 or not 0 <= args.interval <= 10:
         parser.error('Use count 1..10000 and interval 0..10')
-    bootstrap = os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092')
+    bootstrap = os.getenv('KAFKA_BOOTSTRAP_SERVERS', '127.0.0.1:9092')
     ensure_topic(bootstrap)
     print(json.dumps({'acknowledged': publish(synthetic_events(args.count), bootstrap, interval=args.interval)}))

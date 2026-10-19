@@ -97,7 +97,7 @@ if __name__ == '__main__':
         raise KeyboardInterrupt
     signal.signal(signal.SIGTERM, stop)
     try:
-        print(json.dumps(consume(database, os.getenv('KAFKA_BOOTSTRAP_SERVERS', 'localhost:9092'),
+        print(json.dumps(consume(database, os.getenv('KAFKA_BOOTSTRAP_SERVERS', '127.0.0.1:9092'),
             os.getenv('KAFKA_GROUP_ID', 'claims-pilot-v1'), max_messages=args.max_messages,
             idle_timeout=args.idle_timeout)))
     except KeyboardInterrupt:

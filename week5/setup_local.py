@@ -17,7 +17,7 @@ def main():
         'APP_API_KEY': secrets.token_urlsafe(32), 'GEMINI_API_KEY': os.getenv('GEMINI_API_KEY', ''),
         'GEMINI_MODEL': os.getenv('GEMINI_MODEL', 'gemini-3.5-flash-lite'), 'RAG_ENABLED': 'true',
         'RAG_COLLECTION': 'claims-project-v1', 'RAG_MIN_SIMILARITY': '0.55', 'RAG_TOP_K': '3',
-        'KAFKA_BOOTSTRAP_SERVERS': 'localhost:9092', 'KAFKA_GROUP_ID': 'claims-pilot-v1'}
+        'KAFKA_BOOTSTRAP_SERVERS': '127.0.0.1:9092', 'KAFKA_GROUP_ID': 'claims-pilot-v1'}
     fd = os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with os.fdopen(fd, 'w') as handle:
         handle.write('\n'.join(f'{k}={shlex.quote(v)}' for k, v in values.items()) + '\n')

@@ -107,7 +107,7 @@ jobs:
     env:
       WEEK5_POSTGRES_PASSWORD: isolated-ci-only
       TEST_DATABASE_URL: postgresql://max_week5:isolated-ci-only@localhost:5433/max_week5
-      KAFKA_BOOTSTRAP_SERVERS: localhost:9092
+      KAFKA_BOOTSTRAP_SERVERS: 127.0.0.1:9092
       RUN_KAFKA_INTEGRATION: '1'
     steps:
       - uses: actions/checkout@v4
