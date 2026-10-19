@@ -36,10 +36,11 @@ jobs:
           PY
           cp monitor-result.json drill-failure.json
       - name: Create or update the separate drill incident
+        id: incident
         uses: actions/github-script@v7
         with:
           script: |
-            await require('./.github/scripts/monitor_issue.js')({github, context, core});
+            return await require('./.github/scripts/monitor_issue.js')({github, context, core});
       - name: Check real recovery
         id: recovery
         continue-on-error: true
@@ -48,9 +49,25 @@ jobs:
       - name: Record recovery only when the real probe passes
         if: always() && (steps.recovery.outcome == 'success' || steps.recovery.outcome == 'failure')
         uses: actions/github-script@v7
+        env:
+          INCIDENT_RESULT: ${{ steps.incident.outputs.result }}
         with:
           script: |
-            await require('./.github/scripts/monitor_issue.js')({github, context, core});
+            const {issueNumber} = JSON.parse(process.env.INCIDENT_RESULT);
+            if (!Number.isSafeInteger(issueNumber)) throw new Error('No incident was recorded');
+            await require('./.github/scripts/monitor_issue.js')({github, context, core, incidentNumber:issueNumber});
+      - name: Verify that the real GitHub issue is closed
+        if: steps.recovery.outcome == 'success'
+        uses: actions/github-script@v7
+        env:
+          INCIDENT_RESULT: ${{ steps.incident.outputs.result }}
+        with:
+          script: |
+            const {issueNumber} = JSON.parse(process.env.INCIDENT_RESULT);
+            if (!Number.isSafeInteger(issueNumber)) throw new Error('No incident was recorded');
+            const {data} = await github.rest.issues.get({...context.repo, issue_number:issueNumber});
+            if (data.state !== 'closed') throw new Error('Drill incident was not closed');
+            await core.summary.addRaw(`Verified incident closure: ${data.html_url}`).write();
       - uses: actions/upload-artifact@v4
         if: always()
         with:
