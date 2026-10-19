@@ -46,7 +46,7 @@ jobs:
         run: |
           python week4/scripts/monitor.py --url https://maxweek2-gusbakers-972358cb.azurewebsites.net --drill
       - name: Record recovery only when the real probe passes
-        if: always() && steps.recovery.outcome != 'skipped'
+        if: always() && (steps.recovery.outcome == 'success' || steps.recovery.outcome == 'failure')
         uses: actions/github-script@v7
         with:
           script: |
