@@ -19,6 +19,10 @@ El 2026-10-18 a las **19:31:03 UTC**, `/health` devolvió `status=ok`, primer in
 
 El CI previo del usuario, sobre `1fdb1516ea5fa4f3c2bef761b8bb928e1fb75e17`, terminó correctamente: [run 39142041479](https://github.com/gusbakers/max1102-pipeline/actions/runs/39142041479).
 
-Los nuevos commits tienen su evidencia en el [PR de semana 4](https://github.com/gusbakers/max1102-pipeline/pull/1) y [Actions](https://github.com/gusbakers/max1102-pipeline/actions/workflows/ci.yml). Consultar el SHA específico: el éxito del run anterior no valida estos cambios.
+La implementación `599448f9fd1c2d0b43b78f0e15fbec61fc9c1a36` pasó el [CI completo 39159473319](https://github.com/gusbakers/max1102-pipeline/actions/runs/39159473319), incluyendo `check-dag` en Docker y `terraform-validate` en Ubuntu. Esto resuelve las limitaciones de validación local descritas arriba.
+
+El [PR #1](https://github.com/gusbakers/max1102-pipeline/pull/1) se integró en main como `9f806c1448ca9e2e08d1b3560ff22bf8fc931498`. El [monitor de producción 39159578309](https://github.com/gusbakers/max1102-pipeline/actions/runs/39159578309) completó correctamente su primera ejecución sobre ese commit.
+
+`monitor-drill.yml` verifica el ciclo real de un Issue de simulacro en GitHub: crea el incidente y lo cierra solo si un probe posterior funciona. Se ejecuta al cambiar su workflow o la lógica de alertas en main, y manualmente. Consultar [sus runs](https://github.com/gusbakers/max1102-pipeline/actions/workflows/monitor-drill.yml) para la evidencia; un workflow meramente definido no cuenta como simulacro aprobado.
 
 No se han ejecutado desde esta terminal imports/applies cloud, despliegues autenticados, consultas de facturación ni una presentación al equipo. No hay credenciales locales para esos proveedores.

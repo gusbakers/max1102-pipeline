@@ -161,6 +161,7 @@ jobs:
       - uses: azure/webapps-deploy@v3
         with:
           app-name: maxweek2-gusbakers-972358cb
+          resource-group-name: rg-max-week2-api
           package: release/api.zip
       - name: Verify health and the exact tested commit
         env:

@@ -18,7 +18,7 @@
 | Databricks | Exportaciones revisadas y run exitoso con ese código | Perfil MAX1102, IDs de Jobs, carpeta de notebooks y exportación real |
 | Airflow permanente | Host encendido, despliegue y health verificados | Host existente elegido por el propietario; Codespaces no es un servidor permanente |
 | Terraform | Recursos importados, estado remoto, plan vacío | Sesiones de proveedores, inventario real y backend autorizado |
-| Monitoreo | Probe y simulacro en Actions | Workflow integrado en main, notificaciones del usuario; token/IDs para Jobs |
+| Monitoreo | Primer probe de main aprobado; comprobar simulacro y recepción de notificaciones | Ver verification.md; token/IDs para monitorear los Jobs |
 | Costos | Importes del periodo y ahorro medido | Exportaciones Azure/AWS/Snowflake/Databricks/GitHub; no hay acceso a facturación aquí |
 | Protección main | Checks obligatorios configurados | Administración de las reglas del repositorio |
 | Demo del mes | Presentación al equipo y ejecución completa | Ejecución con datos sintéticos en el entorno del propietario |

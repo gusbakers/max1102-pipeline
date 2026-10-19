@@ -1,0 +1,65 @@
+name: MAX monitor alert drill
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/monitor-drill.yml'
+      - '.github/scripts/monitor_issue.js'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: max-production-monitor
+  cancel-in-progress: false
+jobs:
+  alert-lifecycle:
+    if: vars.ENABLE_MONITOR != 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Simulate a failure without changing the API
+        run: |
+          set +e
+          python week4/scripts/monitor.py --url https://maxweek2-gusbakers-972358cb.azurewebsites.net --drill --simulate-failure
+          code=$?
+          set -e
+          test "$code" -eq 1
+          python - <<'PY'
+          import json
+          result = json.load(open('monitor-result.json'))
+          assert result['drill'] and result['status'] == 'failed'
+          assert any(c['component'] == 'alert_drill' and c['reason'] == 'intentional' for c in result['checks'])
+          PY
+          cp monitor-result.json drill-failure.json
+      - name: Create or update the separate drill incident
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await require('./.github/scripts/monitor_issue.js')({github, context, core});
+      - name: Check real recovery
+        id: recovery
+        continue-on-error: true
+        run: |
+          python week4/scripts/monitor.py --url https://maxweek2-gusbakers-972358cb.azurewebsites.net --drill
+      - name: Record recovery only when the real probe passes
+        if: always() && (steps.recovery.outcome == 'success' || steps.recovery.outcome == 'failure')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await require('./.github/scripts/monitor_issue.js')({github, context, core});
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: alert-drill-${{ github.run_id }}
+          path: |
+            drill-failure.json
+            monitor-result.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Fail if recovery was not verified
+        if: steps.recovery.outcome != 'success'
+        run: exit 1
