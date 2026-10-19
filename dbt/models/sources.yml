@@ -1,0 +1,9 @@
+version: 2
+sources:
+  - name: landing
+    database: "{{ var('source_catalog') }}"
+    schema: "{{ var('source_schema') }}"
+    description: Full raw snapshot imported from the existing Databricks Volume; never the cleaned claims table.
+    tables:
+      - name: claims_raw
+      - name: providers_raw

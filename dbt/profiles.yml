@@ -1,0 +1,16 @@
+max_claims:
+  target: "{{ env_var('DBT_TARGET', 'local') }}"
+  outputs:
+    local:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', 'target/claims.duckdb') }}"
+      schema: main
+      threads: 2
+    databricks:
+      type: databricks
+      host: "{{ env_var('DATABRICKS_HOST') }}"
+      http_path: "{{ env_var('DATABRICKS_HTTP_PATH') }}"
+      token: "{{ env_var('DBT_ENV_SECRET_DATABRICKS_TOKEN') }}"
+      catalog: "{{ env_var('DATABRICKS_CATALOG', 'workspace') }}"
+      schema: "{{ env_var('DBT_SCHEMA', 'max1102_week5') }}"
+      threads: 2

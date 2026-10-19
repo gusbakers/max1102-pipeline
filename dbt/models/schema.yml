@@ -1,0 +1,44 @@
+version: 2
+models:
+  - name: stg_providers
+    description: Normalized providers; conflicting IDs fail before claim models run.
+    columns:
+      - name: provider_id
+        data_tests: [not_null, unique]
+      - name: specialty
+        data_tests: [not_null]
+  - name: stg_claims
+    description: Exact deduplication and safe casts, before business validation.
+  - name: int_claims_assessed
+    description: First rejection reason and deterministic duplicate-ID handling, matching the exported validation notebook.
+    data_tests: [claims_quality_limits]
+  - name: claims
+    description: One valid row per claim; PENDING remains rejected under the legacy batch contract.
+    columns:
+      - name: claim_id
+        data_tests: [unique, not_null]
+      - name: member_id
+        data_tests: [not_null]
+      - name: service_date
+        data_tests: [not_null]
+      - name: provider_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('providers')
+                field: provider_id
+      - name: claim_status
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: "{{ var('accepted_claim_statuses') }}"
+  - name: report_monthly
+    description: PAID claims grouped by specialty and month, using decimal amounts.
+    columns:
+      - name: report_month
+        data_tests: [not_null]
+      - name: total_amount
+        data_tests: [not_null]
+  - name: quality_summary
+    description: Raw = exact duplicates + rejected + valid.

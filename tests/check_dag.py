@@ -60,3 +60,12 @@ print(
     "dependencias y espera de "
     "Databricks correctas"
 )
+
+dbt_dag = bag.dags['max_week5_claims_dbt']
+assert set(dbt_dag.task_ids) == {'dbt_build', 'notify'}
+assert dbt_dag.get_task('notify').upstream_task_ids == {'dbt_build'}
+assert dbt_dag.get_task('notify').trigger_rule == 'all_success'
+assert dbt_dag.get_task('dbt_build').wait_for_termination is True
+assert dbt_dag.get_task('dbt_build').json['job_name'] == 'max_week5_claims_dbt'
+assert dbt_dag.max_active_runs == 1
+print('OK: Week 5 dbt DAG waits for the Databricks job before notification.')

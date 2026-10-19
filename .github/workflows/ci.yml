@@ -1,4 +1,4 @@
-name: MAX Week 4 CI-CD
+name: MAX Pipeline CI-CD
 on:
   push:
     branches: [main]
@@ -73,9 +73,65 @@ jobs:
       - run: node --test week4/tests/monitor_issue.test.js
       - name: Check shell syntax
         run: bash -n week4/scripts/azure_oidc.sh week4/scripts/deploy_airflow.sh ops/airflow/apply_release.sh
-      - run: python -m compileall -q databricks/notebooks week4/scripts
+      - run: python -m compileall -q databricks/notebooks databricks/week5 week4/scripts week5 streaming
       - name: Explain notebook validation scope
         run: echo 'Notebook syntax is checked. Spark/GX execution requires the actual Databricks workspace and reviewed source manifest.' >> "$GITHUB_STEP_SUMMARY"
+  week5-dbt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: week5/requirements-test.txt
+      - run: python -m pip install -r week5/requirements-test.txt
+      - run: python -m pytest week5/tests/test_contracts.py -q
+      - name: Execute dbt, known answers, reruns and negative quality cases
+        run: python -m week5.verify_dbt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dbt-local-${{ github.sha }}
+          path: |
+            dbt/target/week5-verification.json
+            dbt/target/manifest.json
+            dbt/target/run_results.json
+            dbt/target/catalog.json
+            dbt/target/index.html
+          if-no-files-found: error
+          retention-days: 14
+  week5-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      WEEK5_POSTGRES_PASSWORD: isolated-ci-only
+      TEST_DATABASE_URL: postgresql://max_week5:isolated-ci-only@localhost:5433/max_week5
+      KAFKA_BOOTSTRAP_SERVERS: 127.0.0.1:9092
+      RUN_KAFKA_INTEGRATION: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r api/requirements-dev.txt -r streaming/requirements.txt
+      - name: Start actual Kafka and PostgreSQL with pgvector
+        run: docker compose -f compose.week5.yml up -d --wait --wait-timeout 180
+      - name: Verify indexing, SQL retrieval, API, broker acknowledgements and consumer recovery
+        run: python -m pytest week5/tests/test_integration.py -q --junitxml=week5-integration.xml
+      - name: Service logs on failure
+        if: failure()
+        run: docker compose -f compose.week5.yml logs --tail 80
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: week5-integration-${{ github.sha }}
+          path: week5-integration.xml
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Stop isolated CI services
+        if: always()
+        run: docker compose -f compose.week5.yml down -v
   terraform-validate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -132,7 +188,7 @@ jobs:
           retention-days: 14
           if-no-files-found: error
   deploy-api:
-    needs: [api-tests, check-dag, tooling-tests, terraform-validate]
+    needs: [api-tests, check-dag, tooling-tests, terraform-validate, week5-dbt, week5-integration]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.deploy == true) && vars.ENABLE_CD == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
@@ -168,7 +224,7 @@ jobs:
           EXPECTED_COMMIT: ${{ github.sha }}
         run: python week4/scripts/smoke.py --url https://maxweek2-gusbakers-972358cb.azurewebsites.net --commit "$EXPECTED_COMMIT"
   deploy-notebooks:
-    needs: [api-tests, check-dag, tooling-tests, terraform-validate]
+    needs: [api-tests, check-dag, tooling-tests, terraform-validate, week5-dbt, week5-integration]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.deploy == true) && vars.ENABLE_DATABRICKS_CD == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -182,7 +238,7 @@ jobs:
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
         run: python week4/scripts/deploy_notebooks.py
   deploy-airflow:
-    needs: [api-tests, check-dag, tooling-tests, terraform-validate]
+    needs: [api-tests, check-dag, tooling-tests, terraform-validate, week5-dbt, week5-integration]
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.deploy == true) && vars.ENABLE_AIRFLOW_CD == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25

@@ -51,3 +51,15 @@ infra/**/plan*.json
 /monitor-result.json
 /infra/inventory.json
 *.bak
+
+# Week 5 generated state and local credentials
+/.venv-week5/
+/.venv-dbt/
+/dbt/target/
+/dbt/logs/
+/dbt/dbt_packages/
+/dbt/.user.yml
+/week5/evidence/
+*.duckdb
+*.duckdb.wal
+/week5/.env

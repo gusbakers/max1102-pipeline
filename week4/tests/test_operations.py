@@ -50,12 +50,14 @@ def test_inventory_rejects_placeholders_duplicates_and_wrong_provider():
 
 
 def test_package_allows_only_runtime_files(tmp_path):
-    for name in ['main.py', 'requirements.txt', 'week4_observability.py', '.env', 'test_api.py', 'requirements-dev.txt']:
+    runtime = {'main.py', 'contracts.py', 'rag.py', 'rag_store.py', 'rag_config.py',
+               'requirements.txt', 'week4_observability.py'}
+    for name in runtime | {'.env', 'test_api.py', 'requirements-dev.txt'}:
         (tmp_path / name).write_text('synthetic-test')
     target = tmp_path / 'release/api.zip'
     package(tmp_path, target, 'a' * 40)
     with zipfile.ZipFile(target) as archive:
-        assert set(archive.namelist()) == {'main.py', 'week4_observability.py', 'requirements.txt', 'build-info.json'}
+        assert set(archive.namelist()) == runtime | {'build-info.json'}
         assert json.loads(archive.read('build-info.json'))['commit'] == 'a' * 40
 
 

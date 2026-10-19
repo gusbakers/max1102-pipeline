@@ -1,0 +1,35 @@
+name: max_claims
+version: '1.0.0'
+config-version: 2
+profile: max_claims
+model-paths: [models]
+macro-paths: [macros]
+test-paths: [tests]
+seed-paths: [seeds]
+clean-targets: [target, dbt_packages]
+vars:
+  use_fixtures: false
+  source_catalog: workspace
+  source_schema: max1102_week5_raw
+  accepted_claim_statuses: [PAID, DENIED]
+models:
+  max_claims:
+    +materialized: view
+    marts:
+      +materialized: table
+seeds:
+  max_claims:
+    +enabled: "{{ var('use_fixtures', false) }}"
+    fixture_claims:
+      +column_types:
+        claim_id: string
+        member_id: string
+        provider_id: string
+        service_date: string
+        claim_status: string
+        claim_amount: string
+    fixture_providers:
+      +column_types:
+        provider_id: string
+        provider_name: string
+        specialty: string

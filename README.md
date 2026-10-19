@@ -4,6 +4,14 @@
 
 Pipeline de reporte mensual de claims por especialidad.
 
+## Semana 5: dbt, RAG y eventos
+
+La nueva entrega migra las reglas de claims a modelos dbt, añade recuperación de documentos con Gemini Embeddings y pgvector a FastAPI, y prepara un piloto Kafka con almacenamiento transaccional y control de duplicados.
+
+[Guía de lunes a viernes](docs/week5/README.md) · [Estado y validación](docs/week5/status.md)
+
+dbt escribe primero en `workspace.max1102_week5` para comparar contra las tablas anteriores. El RAG expone `/claims/rag-summary`; `RAG_ENABLED=true` activa también la recuperación en `/claims/llm-summary`. El piloto Kafka recibe eventos en PostgreSQL. La activación de Databricks y Azure requiere las comprobaciones de cuenta descritas en la guía.
+
 ## Stack
 
 - GitHub web.
