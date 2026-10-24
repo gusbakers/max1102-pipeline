@@ -2,9 +2,9 @@
 
 This project turns healthcare claims into validated analytical tables and a monthly payment report by provider specialty. I built the reporting pipeline, data-quality controls and supporting API to make the results traceable from raw records to published totals.
 
-The platform combines **batch processing**, **SQL transformations**, an **authenticated document-grounded API**, and a separate **Kafka ingestion pilot**. It uses synthetic claims and reference documents for reproducible development and testing.
+The platform combines **batch processing**, **SQL transformations**, an **authenticated document-grounded API**, and a separate **Kafka ingestion pilot**. The cloud workflow uses **AWS S3 for data storage**, **Snowflake for SQL queries**, and **Azure App Service for API hosting**. It uses synthetic claims and reference documents for reproducible development and testing.
 
-**Python · SQL · Databricks / PySpark · Delta Lake · dbt · Airflow · FastAPI · PostgreSQL / pgvector · Gemini · Kafka · Azure · Terraform**
+**Python · SQL · Databricks / PySpark · Delta Lake · AWS S3 · Snowflake · dbt · Airflow · FastAPI · PostgreSQL / pgvector · Gemini · Kafka · Azure App Service · Terraform**
 
 [![CI](https://github.com/gusbakers/max1102-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/gusbakers/max1102-pipeline/actions/workflows/ci.yml)
 
@@ -36,6 +36,14 @@ flowchart TD
 ```
 
 The dbt models are validated separately before replacing the notebook transformations. The streaming pilot lands events in PostgreSQL; a continuous Kafka-to-Delta integration is outside the implemented scope.
+
+## Cloud storage, SQL analytics and API hosting
+
+| Service | Role in the project |
+|---|---|
+| **AWS S3** | Stores exported **Bronze, Silver and Gold snapshots** from Databricks, including claims, providers, monthly reports and engineered features. |
+| **Snowflake** | Provides **SQL queries over the S3 snapshot through an external stage**, separating analytical queries from Databricks processing. |
+| **Azure App Service** | Hosts the **authenticated FastAPI service** independently of Codespaces, with a `/health` endpoint and GitHub Actions deployment tooling. |
 
 ## What the project solves
 
